@@ -667,7 +667,9 @@ impl Store {
     }
 
     /// Deprecated. Use `with_conn` instead.
-    fn get_conn(&self) -> Result<PooledConnection<ConnectionManager<PgConnection>>, Error> {
+    pub(crate) fn get_conn(
+        &self,
+    ) -> Result<PooledConnection<ConnectionManager<PgConnection>>, Error> {
         self.conn.get().map_err(Error::from)
     }
 
@@ -846,6 +848,12 @@ impl Store {
     ) -> Result<(), StoreError> {
         let ops = deployment.create_operations_replace(&schema.id);
         self.create_deployment_internal(name, PRIMARY_SHARD.to_string(), schema, ops, node_id, mode)
+    }
+
+    pub fn shard(&self, id: &SubgraphDeploymentId) -> Result<String, StoreError> {
+        let conn = self.get_conn()?;
+        let storage = self.storage(&conn, id)?;
+        Ok(storage.shard.clone())
     }
 }
 

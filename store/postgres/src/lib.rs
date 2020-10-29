@@ -35,6 +35,7 @@ mod notification_listener;
 pub mod query_store;
 pub mod relational;
 mod relational_queries;
+mod sharded_store;
 mod sql_value;
 pub mod store;
 mod store_events;
