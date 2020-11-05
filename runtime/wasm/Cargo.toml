@@ -6,7 +6,7 @@ edition = "2018"
 [dependencies]
 async-trait = "0.1.41"
 atomic_refcell = "0.1.6"
-ethabi = { git = "https://github.com/graphprotocol/ethabi.git", branch = "master" }
+ethabi = { git = "file:///home/lutter/code/subgraphs/ethabi", branch = "master" }
 futures = "0.1.21"
 hex = "0.4.2"
 graph = { path = "../../graph" }
