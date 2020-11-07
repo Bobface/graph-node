@@ -6,6 +6,7 @@ use diesel::{insert_into, update};
 use futures03::FutureExt as _;
 use graph::prelude::{
     CancelGuard, CancelHandle, CancelToken, CancelableError, NodeId, SubgraphVersionSwitchingMode,
+    PRIMARY_SHARD,
 };
 use lazy_static::lazy_static;
 use lru_time_cache::LruCache;
@@ -811,6 +812,7 @@ impl Store {
     fn create_deployment_internal(
         &self,
         name: SubgraphName,
+        shard: String,
         schema: &Schema,
         ops: Vec<MetadataOperation>,
         node_id: NodeId,
@@ -826,7 +828,7 @@ impl Store {
                 metadata::create_subgraph_version(&econn.conn, name, &schema.id, node_id, mode)?;
             event.changes.extend(changes);
 
-            econn.create_schema(schema)?;
+            econn.create_schema(shard, schema)?;
             econn.send_store_event(&event)
         })
     }
@@ -843,7 +845,7 @@ impl Store {
         mode: SubgraphVersionSwitchingMode,
     ) -> Result<(), StoreError> {
         let ops = deployment.create_operations_replace(&schema.id);
-        self.create_deployment_internal(name, schema, ops, node_id, mode)
+        self.create_deployment_internal(name, PRIMARY_SHARD.to_string(), schema, ops, node_id, mode)
     }
 }
 
@@ -1198,8 +1200,10 @@ impl StoreTrait for Store {
         node_id: NodeId,
         mode: SubgraphVersionSwitchingMode,
     ) -> Result<(), StoreError> {
+        // TODO: determine the shard where the subgraph should go based on name and network
+        let shard = PRIMARY_SHARD.to_string();
         let ops = deployment.create_operations(&schema.id);
-        self.create_deployment_internal(name, schema, ops, node_id, mode)
+        self.create_deployment_internal(name, shard, schema, ops, node_id, mode)
     }
 
     fn create_subgraph(&self, name: SubgraphName) -> Result<String, StoreError> {
