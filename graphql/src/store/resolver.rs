@@ -33,13 +33,15 @@ impl StoreResolver {
         logger: &Logger,
         deployment: SubgraphDeploymentId,
         store: Arc<impl Store>,
-    ) -> Self {
-        StoreResolver {
-            logger: logger.new(o!("component" => "StoreResolver")),
-            store: store.query_store(true),
+    ) -> Result<Self, StoreError> {
+        let store = store.query_store(&deployment, true)?;
+        let logger = logger.new(o!("component" => "StoreResolver"));
+        Ok(StoreResolver {
+            logger,
+            store,
             block_ptr: None,
             deployment,
-        }
+        })
     }
 
     /// Create a resolver that looks up entities at the block specified
@@ -63,7 +65,7 @@ impl StoreResolver {
         .and_then(|x| x)?; // Propagate panics.
         let resolver = StoreResolver {
             logger: logger.new(o!("component" => "StoreResolver")),
-            store: store.query_store(false),
+            store: store.query_store(&deployment, false)?,
             block_ptr: Some(block_ptr),
             deployment,
         };

@@ -233,15 +233,14 @@ where
         }
 
         let deployment = query.schema.id().clone();
+        let resolver =
+            StoreResolver::for_subscription(&self.logger, deployment, self.store.clone())
+                .map_err(|e| QueryExecutionError::from(e))?;
         execute_prepared_subscription(
             query,
             SubscriptionExecutionOptions {
                 logger: self.logger.clone(),
-                resolver: StoreResolver::for_subscription(
-                    &self.logger,
-                    deployment,
-                    self.store.clone(),
-                ),
+                resolver,
                 timeout: GRAPHQL_QUERY_TIMEOUT.clone(),
                 max_complexity: *GRAPHQL_MAX_COMPLEXITY,
                 max_depth: *GRAPHQL_MAX_DEPTH,
