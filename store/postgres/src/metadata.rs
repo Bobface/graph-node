@@ -153,7 +153,9 @@ table! {
 allow_tables_to_appear_in_same_query!(subgraph, subgraph_version, subgraph_deployment);
 
 /// Look up the graft point for the given subgraph in the database and
-/// return it
+/// return it. This will return `None` if the deployment does not have
+/// a graft, or if the deployment has already advanced past the graft point,
+/// indicating that the graft had already been performed
 pub fn deployment_graft(
     conn: &PgConnection,
     id: &SubgraphDeploymentId,
@@ -167,7 +169,10 @@ pub fn deployment_graft(
         match sd::table
             .select((sd::graft_base, sd::graft_block_hash, sd::graft_block_number))
             .filter(sd::id.eq(id.as_str()))
-            .first::<(Option<String>, Option<Vec<u8>>, Option<BigDecimal>)>(conn)?
+            .filter(sd::graft_block_number.gt(sql("coalesce(latest_ethereum_block_number, 0)")))
+            .first::<(Option<String>, Option<Vec<u8>>, Option<BigDecimal>)>(conn)
+            .optional()?
+            .unwrap_or((None, None, None))
         {
             (None, None, None) => Ok(None),
             (Some(subgraph), Some(hash), Some(block)) => {
