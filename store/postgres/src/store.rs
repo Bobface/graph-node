@@ -1198,9 +1198,9 @@ impl StoreTrait for Store {
         schema: &Schema,
         deployment: SubgraphDeploymentEntity,
         node_id: NodeId,
+        _network_name: String,
         mode: SubgraphVersionSwitchingMode,
     ) -> Result<(), StoreError> {
-        // TODO: determine the shard where the subgraph should go based on name and network
         let shard = PRIMARY_SHARD.to_string();
         let ops = deployment.create_operations(&schema.id);
         self.create_deployment_internal(name, shard, schema, ops, node_id, mode)

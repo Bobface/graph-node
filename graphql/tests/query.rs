@@ -26,6 +26,8 @@ use test_store::{
     LOGGER, STORE,
 };
 
+const NETWORK_NAME: &str = "fake_network";
+
 fn setup() -> SubgraphDeploymentId {
     use test_store::block_store::{self, BLOCK_ONE, BLOCK_TWO, GENESIS_BLOCK};
 
@@ -33,7 +35,7 @@ fn setup() -> SubgraphDeploymentId {
 
     let chain = vec![&*GENESIS_BLOCK, &*BLOCK_ONE, &*BLOCK_TWO];
     block_store::remove();
-    block_store::insert(chain, "fake_network");
+    block_store::insert(chain, NETWORK_NAME);
     test_store::remove_subgraphs();
     insert_test_entities(STORE.as_ref(), id.clone());
 
@@ -108,6 +110,7 @@ fn insert_test_entities(store: &impl Store, id: SubgraphDeploymentId) {
             &schema,
             deployment,
             node_id,
+            NETWORK_NAME.to_string(),
             SubgraphVersionSwitchingMode::Instant,
         )
         .unwrap();
